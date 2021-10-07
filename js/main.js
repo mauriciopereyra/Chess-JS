@@ -8,16 +8,62 @@ var all_moves = []
 var white_side = true
 var selected_squares = []
 var possible_squares = []
+var blocking_squares = []
 
+function directions(){
+	// columns_indexes[origin.column]
+	// origin.row
+
+	// Check all directions and remove squares that are blocked by other pieces
+
+	if (selected_squares.length){
+		origin = selected_squares[0]
+		directions_str = ['top-left','left','bottom-left','bottom','bottom-right','right','top-right','top']
+		directions_formula = {'top-left':[-1,1],'left':[-1,0],'bottom-left':[-1,-1],'bottom':[0,-1],'bottom-right':[1,-1],'right':[1,0],'top-right':[1,1],'top':[0,1]}
+
+		// Iterate over all directions
+		for (var j = 0; j < directions_str.length; j++) {
+			direction = directions_formula[directions_str[j]]
+			let blocked = false
+			for (var i = 1; (((columns_indexes[origin.column] + i* direction[0] ) > 0) && ((origin.row + i* direction[1] ) > 0) && ((columns_indexes[origin.column] + i* direction[0] ) <= 8) && ((origin.row + i* direction[1] ) <= 8)) ; i++) {
+				output_column = (columns[columns_indexes[origin.column] + i* direction[0] -1])
+				output_row = (origin.row + i* direction[1])
+				
+				// If this direction is already blocked, remove this square from possible and blocking squares
+				if (blocked) {
+					if (possible_squares.includes(squares_map[output_column][output_row])){
+						possible_squares.splice(possible_squares.indexOf(squares_map[output_column][output_row]),1)
+					}
+					if (blocking_squares.includes(squares_map[output_column][output_row])){
+						blocking_squares.splice(blocking_squares.indexOf(squares_map[output_column][output_row]),1)
+					}
+
+				}
+
+
+				if (squares_map[output_column][output_row].piece){
+					blocked = true
+				}
+				// console.log(output_column)
+				// console.log(output_row)
+				// console.log(squares_map[output_column][output_row])
+			}
+			
+		}
+
+	}
+
+}
 
 
 function rulesAllow(origin,target){
 	// Check if the piece will take another
 	if (target.piece){
 		// Not allow if pieces are the same color
-		if (origin.piece.color == target.piece.color) {
-			return false
-		}
+		// Seems to not be necessary anymore
+		// if (origin.piece.color == target.piece.color) {
+		// 	return false
+		// }
 	}
 
 	// Pieces movements
@@ -52,9 +98,11 @@ function rulesAllow(origin,target){
 	// Pawn
 	if (origin.piece.type == 'pawn') {
 		if ((origin.column == target.column)){
-			// Check if pawn is in starting position
-			if (((origin.piece.color == 'white') && (origin.row == 2) && ((target.row == 3) || (target.row == 4))) || ((origin.piece.color == 'black') && (origin.row == 7)  && ((target.row == 6) || (target.row == 5)))){
-				return true
+			// Check if pawn is in starting position and no piece in target
+			if (!target.piece){
+				if (((origin.piece.color == 'white') && (origin.row == 2) && ((target.row == 3) || (target.row == 4))) || ((origin.piece.color == 'black') && (origin.row == 7)  && ((target.row == 6) || (target.row == 5)))){
+					return true
+				}
 			}
 			// If not in starting position, move it only one step forward
 			if (((origin.piece.color == 'white') && ((target.row - origin.row) == 1)) || ((origin.piece.color == 'black') && ((origin.row - target.row) == 1))) {
@@ -108,6 +156,7 @@ function main() {
 
 	function possible(){
 		possible_squares = []
+		blocking_squares = []
 		if (selected_squares.length){
 			let selected_square = selected_squares[0]
 	
@@ -115,6 +164,9 @@ function main() {
 				for (var i = 0; i < columns.length; i++) {
 					if (rulesAllow(selected_square,squares_map[columns[i]][rows[j]])){
 						possible_squares.push(squares_map[columns[i]][rows[j]])
+						if (squares_map[columns[i]][rows[j]].piece){
+							blocking_squares.push(squares_map[columns[i]][rows[j]])
+						}
 					} 
 
 				}
@@ -123,7 +175,7 @@ function main() {
 			else {
 				possible_squares = []
 			}
-
+	console.log(possible_squares)
 	}
 
 
@@ -166,7 +218,7 @@ function main() {
 		}
 
 		possible()
-
+		directions()
 		Draw()
 	}
 
@@ -217,6 +269,11 @@ function main() {
 				this.element.classList.remove("possible") 
 			}
 
+			if (blocking_squares.includes(this)){
+				this.element.classList.add("blocking") 
+			} else {
+				this.element.classList.remove("blocking") 
+			}
 
 			if (this.piece){
 				if (this.piece.active) {
@@ -252,29 +309,33 @@ function main() {
 
 		move (column,row) {
 			let moveIsAllowed = rulesAllow(this.square,squares_map[column][row])
-			// console.log(moveIsAllowed)
-
-			// If En Passant, remove taken piece
-			if (moveIsAllowed.length){
-				moveIsAllowed[1].piece.active = false
-				moveIsAllowed[1].piece = null
+			let enPassant = false
+			if (moveIsAllowed.length) {
+				enPassant = true
 			}
 
-			if (moveIsAllowed){
-				// Add move to history
-				all_moves.push({'piece':this.type,'origin':{'column':this.square.column,'row':this.square.row},'target':{'column':column,'row':parseInt(row)}})
-				// Set taken piece as inactive
-				if(squares_map[column][row].piece){squares_map[column][row].piece.active = false}
-				this.square.piece = null
-				// Move piece
-				this.square = squares_map[column][row]
-				this.square.piece = this
-				// Promote pawn to queen
-				if (((this.type == 'pawn') && ((this.square.row == 1) || (this.square.row == 8)))){this.type = 'queen'}
-				// Change turn
-				if (white_turn) {white_turn = false} else {white_turn = true}
-			}
+			if (moveIsAllowed && possible_squares.includes(squares_map[column][row])){
+				// If En Passant, remove taken piece
+				if (enPassant){
+					moveIsAllowed[1].piece.active = false
+					moveIsAllowed[1].piece = null
+				}
 
+				if (moveIsAllowed){
+					// Add move to history
+					all_moves.push({'piece':this.type,'origin':{'column':this.square.column,'row':this.square.row},'target':{'column':column,'row':parseInt(row)}})
+					// Set taken piece as inactive
+					if(squares_map[column][row].piece){squares_map[column][row].piece.active = false}
+					this.square.piece = null
+					// Move piece
+					this.square = squares_map[column][row]
+					this.square.piece = this
+					// Promote pawn to queen
+					if (((this.type == 'pawn') && ((this.square.row == 1) || (this.square.row == 8)))){this.type = 'queen'}
+					// Change turn
+					if (white_turn) {white_turn = false} else {white_turn = true}
+				}
+			}
 		}
 
 
@@ -364,7 +425,7 @@ createPieces()
 // Check blocking pieces
 for (var i = 0; i < columns.length; i++) {
 	for (var j = 0; j < rows.length; j++) {
-		console.log(squares_map[columns[i]][rows[j]])
+		// console.log(squares_map[columns[i]][rows[j]])
 	}
 }
 //////////////////////////

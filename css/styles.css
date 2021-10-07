@@ -16,12 +16,16 @@
 	width: 800px;
 }
 
-.selected {
-	background: orange;
-}
 
 .possible {
 	background: skyblue;
+}
+
+.blocking {
+	background: red;
+}
+.selected {
+	background: orange;
 }
 
 /* Pieces images */
