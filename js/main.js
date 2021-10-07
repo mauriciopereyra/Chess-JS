@@ -98,31 +98,45 @@ function rulesAllow(origin,target){
 
 }
 
+
+
+
+
+
+
 function main() {
 
 	function select(square) { 
-		let selected = document.getElementsByClassName("selected")
 		let selected_square = squares_map[this.dataset.column][this.dataset.row]
 
 
-		if (this.classList.contains('selected')){
+		if (selected_squares.includes(selected_square)){
 			// If player selected this square before, unselect it
-			this.classList.remove("selected") 
+			selected_squares = [] 
 		} else {
-			if (selected.length > 0) {
+			if (selected_squares.length > 0) {
 				// If there was a previous selected square...
-				selected_piece = squares_map[selected[0].dataset.column][selected[0].dataset.row].piece
-				// Unselect last selected square
-				selected[0].classList.remove("selected")
-				// If previous selected square had a piece, move it here.
+				selected_piece = selected_squares[0].piece
 				if (selected_piece) {
-					selected_piece.move(this.dataset.column,this.dataset.row)
+					if (selected_square.piece) {
+						// If selecting same color piece target, just select the new selected one
+						if (selected_square.piece.color == selected_piece.color){
+							selected_squares = [selected_square]
+						} else {
+						selected_squares = []
+						selected_piece.move(selected_square.column,selected_square.row)
+						}
+					} else {
+						// If previous selected square had a piece, move it here.
+						selected_squares = []
+						selected_piece.move(selected_square.column,selected_square.row)
+					}
 				}
 			} else {
 				// If this square has a piece, and it's the player's turn, select it
 				if (selected_square.piece) {
 					if ((white_turn && selected_square.piece.color == 'white') || (!white_turn && selected_square.piece.color == 'black')) {
-						this.classList.add("selected") 
+						selected_squares.push(selected_square)
 					}
 				}
 
@@ -166,6 +180,13 @@ function main() {
 		}
 
 		update_img () {
+
+			if (selected_squares.includes(this)){
+				this.element.classList.add("selected") 
+			} else {
+				this.element.classList.remove("selected") 
+			}
+
 			if (this.piece){
 				if (this.piece.active) {
 					this.img.className = ''
