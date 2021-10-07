@@ -76,14 +76,14 @@ function rulesAllow(origin,target){
 						return true
 					}
 				// Check if En Passant
-				if (Math.abs(all_moves.at(-1).origin.row-all_moves.at(-1).target.row) == 2 ){
+				if (all_moves.length){
 					// Check if origin pawn is in the correct position for En Passant
-					if (target.column == all_moves.at(-1).origin.column){
-						if (origin.row == all_moves.at(-1).target.row){
-							// Remove taken pawn
-							squares_map[all_moves.at(-1).target.column][all_moves.at(-1).target.row].piece.active = false
-							squares_map[all_moves.at(-1).target.column][all_moves.at(-1).target.row].piece = null
-							return true
+					if (Math.abs(all_moves.at(-1).origin.row-all_moves.at(-1).target.row) == 2 ){
+						if (target.column == all_moves.at(-1).origin.column){
+							if (origin.row == all_moves.at(-1).target.row){
+								// Remove taken pawn
+								return ['enPassant',squares_map[all_moves.at(-1).target.column][all_moves.at(-1).target.row]]
+							}
 						}
 					}
 				}
@@ -105,6 +105,27 @@ function rulesAllow(origin,target){
 
 
 function main() {
+
+	function possible(){
+		possible_squares = []
+		if (selected_squares.length){
+			let selected_square = selected_squares[0]
+	
+			for (var j = 0; j < rows.length; j++) {
+				for (var i = 0; i < columns.length; i++) {
+					if (rulesAllow(selected_square,squares_map[columns[i]][rows[j]])){
+						possible_squares.push(squares_map[columns[i]][rows[j]])
+					} 
+
+				}
+				}
+			}
+			else {
+				possible_squares = []
+			}
+
+	}
+
 
 	function select(square) { 
 		let selected_square = squares_map[this.dataset.column][this.dataset.row]
@@ -143,6 +164,9 @@ function main() {
 			}
 
 		}
+
+		possible()
+
 		Draw()
 	}
 
@@ -187,6 +211,13 @@ function main() {
 				this.element.classList.remove("selected") 
 			}
 
+			if (possible_squares.includes(this)){
+				this.element.classList.add("possible") 
+			} else {
+				this.element.classList.remove("possible") 
+			}
+
+
 			if (this.piece){
 				if (this.piece.active) {
 					this.img.className = ''
@@ -220,7 +251,16 @@ function main() {
 		}
 
 		move (column,row) {
-			if (rulesAllow(this.square,squares_map[column][row])){
+			let moveIsAllowed = rulesAllow(this.square,squares_map[column][row])
+			// console.log(moveIsAllowed)
+
+			// If En Passant, remove taken piece
+			if (moveIsAllowed.length){
+				moveIsAllowed[1].piece.active = false
+				moveIsAllowed[1].piece = null
+			}
+
+			if (moveIsAllowed){
 				// Add move to history
 				all_moves.push({'piece':this.type,'origin':{'column':this.square.column,'row':this.square.row},'target':{'column':column,'row':parseInt(row)}})
 				// Set taken piece as inactive
