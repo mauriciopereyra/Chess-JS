@@ -1,3 +1,5 @@
+function main(){
+
 var all_squares = [[],[],[],[],[],[],[],[]]
 var rows = [1,2,3,4,5,6,7,8].reverse()
 var columns = ['A','B','C','D','E','F','G','H']
@@ -6,9 +8,21 @@ var squares_map = {}
 var white_turn = true
 var all_moves = []
 var white_side = true
+
 var selected_squares = []
 var possible_squares = []
 var blocking_squares = []
+
+var kings = {}
+var check = false
+var white_pieces = []
+var black_pieces = []
+
+function unselectAll(){
+	selected_squares = []
+	possible_squares = []
+	blocking_squares = []
+}
 
 function directions(){
 	// columns_indexes[origin.column]
@@ -54,6 +68,10 @@ function directions(){
 	}
 
 }
+
+
+
+
 
 
 function rulesAllow(origin,target){
@@ -139,10 +157,10 @@ function rulesAllow(origin,target){
 	}
 
 // Castling
-// Blocking pieces
+// Blocking pieces V
 // Check
 // Checkmate
-// Switching sides
+// Switching sides V
 
 }
 
@@ -152,7 +170,23 @@ function rulesAllow(origin,target){
 
 
 
-function main() {
+
+	// function kingUnderCheck (king){
+	// 	console.log(king)
+	// 	if (king.color == 'white'){
+	// 		pieces = black_pieces
+	// 	}else{
+	// 		pieces = white_pieces
+	// 	}
+
+	// 	for (var i = 0; i < pieces.length; i++) {
+	// 		select_from_square(pieces[i].square)
+	// 		if (pieces[i].active && rulesAllow(pieces[i].square,king.square) && possible_squares.includes(pieces[i].square)){
+	// 			console.log("Under check")
+	// 		}
+	// 	}
+	// }
+
 
 	function possible(){
 		possible_squares = []
@@ -176,6 +210,15 @@ function main() {
 				possible_squares = []
 			}
 	console.log(possible_squares)
+	}
+
+	function select_from_square(square){
+		select(square.element)
+	}
+
+	function select_and_draw(square){
+		select(square)
+		Draw()
 	}
 
 
@@ -221,6 +264,27 @@ function main() {
 		directions()
 		Draw()
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -295,6 +359,7 @@ function main() {
 			this.type = type
 			this.color = color
 			this.active = true
+			if (this.color == 'white'){white_pieces.push(this)} else {black_pieces.push(this)}
 		}
 
 		set (column,row) {
@@ -308,10 +373,14 @@ function main() {
 		}
 
 		move (column,row) {
+			// kingUnderCheck(kings.white)
+
 			let moveIsAllowed = rulesAllow(this.square,squares_map[column][row])
 			let enPassant = false
-			if (moveIsAllowed.length) {
-				enPassant = true
+			if (moveIsAllowed){
+				if (moveIsAllowed.length) {
+					enPassant = true
+				}
 			}
 
 			if (moveIsAllowed && possible_squares.includes(squares_map[column][row])){
@@ -373,20 +442,20 @@ function main() {
 
 	///////
 
-// Need to separate setup and draw
-
-// Need to create a coordinates system
-
-
 
 
 
 function createPieces(){
+
+	kings = {'white':new Piece('white','king'),'black':new Piece('black','king')}
+	kings['white'].set('E',1)
+	kings['black'].set('E',8)
+
+
 	new Piece('white','rook').set('A',1)
 	new Piece('white','knight').set('B',1)
 	new Piece('white','bishop').set('C',1)
 	new Piece('white','queen').set('D',1)
-	new Piece('white','king').set('E',1)
 	new Piece('white','bishop').set('F',1)
 	new Piece('white','knight').set('G',1)
 	new Piece('white','rook').set('H',1)
@@ -404,7 +473,6 @@ function createPieces(){
 	new Piece('black','knight').set('B',8)
 	new Piece('black','bishop').set('C',8)
 	new Piece('black','queen').set('D',8)
-	new Piece('black','king').set('E',8)
 	new Piece('black','bishop').set('F',8)
 	new Piece('black','knight').set('G',8)
 	new Piece('black','rook').set('H',8)
@@ -421,14 +489,8 @@ function createPieces(){
 }
 
 createPieces()
-/////////////////////////////////////
-// Check blocking pieces
-for (var i = 0; i < columns.length; i++) {
-	for (var j = 0; j < rows.length; j++) {
-		// console.log(squares_map[columns[i]][rows[j]])
-	}
-}
-//////////////////////////
+
+// Set and switch sides
 
 function switchSide(){
 	if (white_side) {
@@ -448,6 +510,13 @@ function setSide(color){
 }
 
 setSide('white')
+
+
+document.addEventListener("keypress", function(event) {
+  if (event.keyCode == 13) {
+    switchSide()
+  }
+});
 
 
 
