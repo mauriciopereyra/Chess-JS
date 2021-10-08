@@ -259,11 +259,39 @@ function rulesAllow(origin,target){
 // Check V
 // Checkmate V
 // Switching sides V
-// Stalemate
+// Stalemate V
 
 }
 
 
+
+
+
+  function kingUnderCheck(){
+
+		let kingUnderCheck = false
+		let pieces = []
+
+		if (white_turn){
+			pieces = black_pieces
+			king = kings['white']
+		}else{
+			pieces = white_pieces
+			king = kings['black']
+		}
+
+
+		for (var i = 0; i < pieces.length; i++) {
+			
+			if ((getPossibleSquares(pieces[i].square).includes(king.square)) && (pieces[i].active == true)){
+				kingUnderCheck = true
+				
+			}
+		}
+
+		return kingUnderCheck
+
+  }
 
 
 
@@ -410,12 +438,6 @@ function rulesAllow(origin,target){
 			pieces = black_pieces
 		}	
 
-		// function onlyActive(piece){
-		// 	return piece.active
-		// }
-
-		// pieces = pieces.filter(onlyActive)
-
 		pieces = pieces.filter(piece => piece.active)
 
 		for (var i = 0; i < pieces.length; i++) {
@@ -451,6 +473,49 @@ function rulesAllow(origin,target){
 	}
 
 
+
+	function isStalemate(){
+		let pieces
+
+		if (white_turn){
+			pieces = white_pieces
+		}else{
+			pieces = black_pieces
+		}	
+
+		pieces = pieces.filter(piece => piece.active)
+
+		for (var i = 0; i < pieces.length; i++) {
+			let temp_possible_squares = getPossibleSquares(pieces[i].square)
+			// console.log(temp_possible_squares)
+
+			for (var k = 0; k < temp_possible_squares.length; k++) {
+				if(!kingWillBeUnderCheck(pieces[i],temp_possible_squares[k])){
+
+					if(temp_possible_squares[k].piece){
+						if(!pieces[i].color == temp_possible_squares[k].piece.color){
+							console.log('Same color')
+							console.log('Can move')
+							console.log(pieces[i])
+							console.log(temp_possible_squares[k])
+							return false
+						}
+					}else{
+						console.log('Can move')
+						console.log(pieces[i])
+						console.log(temp_possible_squares[k])
+						return false
+					}
+
+
+
+				}
+			
+			}
+
+		}
+		return true
+	}
 
 
 
@@ -686,22 +751,22 @@ function createPieces(){
 	new Piece('white','pawn').set('G',2)
 	new Piece('white','pawn').set('H',2)
 
-	new Piece('black','rook').set('A',8)
-	new Piece('black','knight').set('B',8)
-	new Piece('black','bishop').set('C',8)
-	new Piece('black','queen').set('D',8)
-	new Piece('black','bishop').set('F',8)
-	new Piece('black','knight').set('G',8)
-	new Piece('black','rook').set('H',8)
+	// new Piece('black','rook').set('A',8)
+	// new Piece('black','knight').set('B',8)
+	// new Piece('black','bishop').set('C',8)
+	// new Piece('black','queen').set('D',8)
+	// new Piece('black','bishop').set('F',8)
+	// new Piece('black','knight').set('G',8)
+	// new Piece('black','rook').set('H',8)
 
-	new Piece('black','pawn').set('A',7)
-	new Piece('black','pawn').set('B',7)
-	new Piece('black','pawn').set('C',7)
-	new Piece('black','pawn').set('D',7)
-	new Piece('black','pawn').set('E',7)
-	new Piece('black','pawn').set('F',7)
-	new Piece('black','pawn').set('G',7)
-	new Piece('black','pawn').set('H',7)
+	// new Piece('black','pawn').set('A',7)
+	// new Piece('black','pawn').set('B',7)
+	// new Piece('black','pawn').set('C',7)
+	// new Piece('black','pawn').set('D',7)
+	// new Piece('black','pawn').set('E',7)
+	// new Piece('black','pawn').set('F',7)
+	// new Piece('black','pawn').set('G',7)
+	// new Piece('black','pawn').set('H',7)
 
 }
 
@@ -732,7 +797,7 @@ setSide('white')
 document.addEventListener("keypress", function(event) {
   if (event.keyCode == 13) {
     // switchSide()
-    isCheckmate()
+    console.log(kingUnderCheck())
 
   }
 });
@@ -771,13 +836,20 @@ function Draw(){
 			}
 		}}
 
-if(isCheckmate()){alert('Checkmate')}
 
+
+if(kingUnderCheck()){
+	if(isCheckmate()){alert('Checkmate')}	
+	}else{
+	if(isCheckmate()){alert('Stalemate')}
 }
 
 
 
 
+
+
+}
 
 
 
