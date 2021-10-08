@@ -17,6 +17,7 @@ var kings = {}
 var check = false
 var white_pieces = []
 var black_pieces = []
+var white_queen = []
 
 function unselectAll(){
 	selected_squares = []
@@ -24,14 +25,92 @@ function unselectAll(){
 	blocking_squares = []
 }
 
-function directions(){
-	// columns_indexes[origin.column]
-	// origin.row
 
-	// Check all directions and remove squares that are blocked by other pieces
+function select(square) { 
+	let selected_square = squares_map[this.dataset.column][this.dataset.row]
+	// console.log(getPossibleSquares(selected_square))
 
-	if (selected_squares.length){
-		origin = selected_squares[0]
+	if (selected_squares.includes(selected_square)){
+		// If player selected this square before, unselect it
+		selected_squares = [] 
+	} else {
+		if (selected_squares.length > 0) {
+			// If there was a previous selected square...
+			selected_piece = selected_squares[0].piece
+			if (selected_piece) {
+				if (selected_square.piece) {
+					// If selecting same color piece target, just select the new selected one
+					if (selected_square.piece.color == selected_piece.color){
+						selected_squares = [selected_square]
+					} else {
+					selected_squares = []
+					selected_piece.move(selected_square.column,selected_square.row)
+					}
+				} else {
+					// If previous selected square had a piece, move it here.
+					selected_squares = []
+					selected_piece.move(selected_square.column,selected_square.row)
+				}
+			}
+		} else {
+			// If this square has a piece, and it's the player's turn, select it
+			if (selected_square.piece) {
+				if ((white_turn && selected_square.piece.color == 'white') || (!white_turn && selected_square.piece.color == 'black')) {
+					selected_squares.push(selected_square)
+				}
+			}
+
+		}
+
+	}
+
+	// possible()
+	// directions()
+	Draw()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+function getPossibleSquares(square){
+
+
+	// function possible(square){
+		let possible_squares = []
+		let blocking_squares = []
+
+		let selected_square = square
+	
+		for (var j = 0; j < rows.length; j++) {
+			for (var i = 0; i < columns.length; i++) {
+				if (rulesAllow(selected_square,squares_map[columns[i]][rows[j]])){
+					possible_squares.push(squares_map[columns[i]][rows[j]])
+					if (squares_map[columns[i]][rows[j]].piece){
+						blocking_squares.push(squares_map[columns[i]][rows[j]])
+					}
+				} 
+
+			}
+			}
+
+	// }
+
+
+
+
+	// function directions(square){
+		// Check all directions and remove squares that are blocked by other pieces
+
+		origin = square
 		directions_str = ['top-left','left','bottom-left','bottom','bottom-right','right','top-right','top']
 		directions_formula = {'top-left':[-1,1],'left':[-1,0],'bottom-left':[-1,-1],'bottom':[0,-1],'bottom-right':[1,-1],'right':[1,0],'top-right':[1,1],'top':[0,1]}
 
@@ -58,6 +137,9 @@ function directions(){
 				if (squares_map[output_column][output_row].piece){
 					blocked = true
 				}
+
+				// remove same color pieces from possible squares
+
 				// console.log(output_column)
 				// console.log(output_row)
 				// console.log(squares_map[output_column][output_row])
@@ -65,9 +147,12 @@ function directions(){
 			
 		}
 
-	}
+
+
+	return possible_squares
 
 }
+
 
 
 
@@ -83,6 +168,19 @@ function rulesAllow(origin,target){
 		// 	return false
 		// }
 	}
+
+	if (!origin.piece){return false}
+
+
+	if (target.piece){
+		if (origin.piece.color == target.piece.color)
+		{
+			// console.log(origin.piece.color+target.piece.color)
+			return false
+		}
+	}
+	
+
 
 	// Pieces movements
 	// Rook
@@ -158,9 +256,10 @@ function rulesAllow(origin,target){
 
 // Castling
 // Blocking pieces V
-// Check
-// Checkmate
+// Check V
+// Checkmate V
 // Switching sides V
+// Stalemate
 
 }
 
@@ -171,46 +270,191 @@ function rulesAllow(origin,target){
 
 
 
-	// function kingUnderCheck (king){
-	// 	console.log(king)
-	// 	if (king.color == 'white'){
+	function kingWillBeUnderCheck(piece_to_be_moved,target){
+
+		let willBeUnderCheck = false
+		let pieces = []
+
+		// Get old piece
+		old_piece = target.piece
+		// Get old square
+		old_square = piece_to_be_moved.square
+
+		// console.log('STEP 1')
+		// console.log('old_square',old_square)
+		// console.log('old_piece',old_piece)
+		// console.log('target_square',target)
+		// console.log(target.piece)
+
+
+
+		// Deactivate old piece
+		if (old_piece){old_piece.active = false}
+		// Set old square empty
+		piece_to_be_moved.square.piece = null
+		// Move piece to target
+		target.piece = piece_to_be_moved
+		// Set new square to moved piece
+		piece_to_be_moved.square = target
+
+
+		// console.log('STEP 2')
+		// console.log('old_square',old_square)
+		// console.log('old_piece',old_piece)
+		// console.log('target_square',target)
+		// console.log(target.piece)
+
+
+
+
+
+		if (piece_to_be_moved.color == 'white'){
+			pieces = black_pieces
+		}else{
+			pieces = white_pieces
+		}
+
+		king = kings[piece_to_be_moved.color]
+
+		for (var i = 0; i < pieces.length; i++) {
+			
+			if ((getPossibleSquares(pieces[i].square).includes(king.square)) && (pieces[i].active == true)){
+				willBeUnderCheck = true
+				
+			}
+		}
+
+
+
+
+		// Set old square to piece moved
+		piece_to_be_moved.square = old_square
+		// Set piece moved square to piece moved
+		piece_to_be_moved.square.piece = piece_to_be_moved
+		// Return old piece to its square
+		target.piece = old_piece
+		// Reactivate old piece
+		if (old_piece){old_piece.active = true}
+
+
+
+
+		// console.log('STEP 3')
+		// console.log('old_square',old_square)
+		// console.log('old_piece',old_piece)
+		// console.log('target_square',target)
+		// console.log(target.piece)
+
+
+
+
+
+		// // Reactivate old piece
+		// if (old_piece){old_piece.active = true}
+		// // Return old piece to its square
+		// target.piece = old_piece
+		// // Set old square to piece moved
+		// piece_to_be_moved.square = old_square
+		// // Set piece moved square to piece moved
+		// piece_to_be_moved.square.piece = piece_to_be_moved
+
+		return willBeUnderCheck
+
+	}
+
+
+
+
+	// function isCheckmate(color){
+	// 	let pieces
+
+	// 	if (color == 'black'){
 	// 		pieces = black_pieces
 	// 	}else{
 	// 		pieces = white_pieces
-	// 	}
+	// 	}	
 
 	// 	for (var i = 0; i < pieces.length; i++) {
-	// 		select_from_square(pieces[i].square)
-	// 		if (pieces[i].active && rulesAllow(pieces[i].square,king.square) && possible_squares.includes(pieces[i].square)){
-	// 			console.log("Under check")
+	// 		let possible_squares = getPossibleSquares(pieces[i].square)
+
+	// 		for (var j = 0; j < possible_squares.length; j++) {
+	// 			if(!kingWillBeUnderCheck(pieces[i],possible_squares[j])){
+	// 					let colorA = null
+	// 					let colorB = null
+	// 					if (pieces[i]){colorA=pieces[i].color}
+	// 					if (possible_squares[j].piece){colorB=possible_squares[j].piece.color}
+
+	// 					console.log(colorA+colorB)
+
+	// 					if(!colorA==colorB){
+	// 						console.log('Can move')
+	// 						console.log(pieces[i])
+	// 						console.log(possible_squares[j])
+	// 						return false
+	// 					}
+					
+				
+	// 			}
 	// 		}
 	// 	}
+	// 	return true
 	// }
 
 
-	function possible(){
-		possible_squares = []
-		blocking_squares = []
-		if (selected_squares.length){
-			let selected_square = selected_squares[0]
-	
-			for (var j = 0; j < rows.length; j++) {
-				for (var i = 0; i < columns.length; i++) {
-					if (rulesAllow(selected_square,squares_map[columns[i]][rows[j]])){
-						possible_squares.push(squares_map[columns[i]][rows[j]])
-						if (squares_map[columns[i]][rows[j]].piece){
-							blocking_squares.push(squares_map[columns[i]][rows[j]])
+	function isCheckmate(){
+		let pieces
+
+		if (white_turn){
+			pieces = white_pieces
+		}else{
+			pieces = black_pieces
+		}	
+
+		// function onlyActive(piece){
+		// 	return piece.active
+		// }
+
+		// pieces = pieces.filter(onlyActive)
+
+		pieces = pieces.filter(piece => piece.active)
+
+		for (var i = 0; i < pieces.length; i++) {
+			let temp_possible_squares = getPossibleSquares(pieces[i].square)
+			// console.log(temp_possible_squares)
+
+			for (var k = 0; k < temp_possible_squares.length; k++) {
+				if(!kingWillBeUnderCheck(pieces[i],temp_possible_squares[k])){
+
+					if(temp_possible_squares[k].piece){
+						if(!pieces[i].color == temp_possible_squares[k].piece.color){
+							console.log('Same color')
+							console.log('Can move')
+							console.log(pieces[i])
+							console.log(temp_possible_squares[k])
+							return false
 						}
-					} 
+					}else{
+						console.log('Can move')
+						console.log(pieces[i])
+						console.log(temp_possible_squares[k])
+						return false
+					}
+
+
 
 				}
-				}
+			
 			}
-			else {
-				possible_squares = []
-			}
-	console.log(possible_squares)
+
+		}
+		return true
 	}
+
+
+
+
+
+
 
 	function select_from_square(square){
 		select(square.element)
@@ -218,52 +462,8 @@ function rulesAllow(origin,target){
 
 	function select_and_draw(square){
 		select(square)
-		Draw()
 	}
 
-
-	function select(square) { 
-		let selected_square = squares_map[this.dataset.column][this.dataset.row]
-
-
-		if (selected_squares.includes(selected_square)){
-			// If player selected this square before, unselect it
-			selected_squares = [] 
-		} else {
-			if (selected_squares.length > 0) {
-				// If there was a previous selected square...
-				selected_piece = selected_squares[0].piece
-				if (selected_piece) {
-					if (selected_square.piece) {
-						// If selecting same color piece target, just select the new selected one
-						if (selected_square.piece.color == selected_piece.color){
-							selected_squares = [selected_square]
-						} else {
-						selected_squares = []
-						selected_piece.move(selected_square.column,selected_square.row)
-						}
-					} else {
-						// If previous selected square had a piece, move it here.
-						selected_squares = []
-						selected_piece.move(selected_square.column,selected_square.row)
-					}
-				}
-			} else {
-				// If this square has a piece, and it's the player's turn, select it
-				if (selected_square.piece) {
-					if ((white_turn && selected_square.piece.color == 'white') || (!white_turn && selected_square.piece.color == 'black')) {
-						selected_squares.push(selected_square)
-					}
-				}
-
-			}
-
-		}
-
-		possible()
-		directions()
-		Draw()
-	}
 
 
 
@@ -373,7 +573,14 @@ function rulesAllow(origin,target){
 		}
 
 		move (column,row) {
-			// kingUnderCheck(kings.white)
+			// console.log(all_moves)
+
+			if (kingWillBeUnderCheck(this,squares_map[column][row])){
+			alert('You are under check')
+			return false
+			}
+
+
 
 			let moveIsAllowed = rulesAllow(this.square,squares_map[column][row])
 			let enPassant = false
@@ -383,7 +590,8 @@ function rulesAllow(origin,target){
 				}
 			}
 
-			if (moveIsAllowed && possible_squares.includes(squares_map[column][row])){
+
+			if (moveIsAllowed && getPossibleSquares(this.square).includes(squares_map[column][row])){
 				// If En Passant, remove taken piece
 				if (enPassant){
 					moveIsAllowed[1].piece.active = false
@@ -391,10 +599,12 @@ function rulesAllow(origin,target){
 				}
 
 				if (moveIsAllowed){
+
 					// Add move to history
 					all_moves.push({'piece':this.type,'origin':{'column':this.square.column,'row':this.square.row},'target':{'column':column,'row':parseInt(row)}})
 					// Set taken piece as inactive
 					if(squares_map[column][row].piece){squares_map[column][row].piece.active = false}
+					// delete squares_map[column][row].piece
 					this.square.piece = null
 					// Move piece
 					this.square = squares_map[column][row]
@@ -403,6 +613,12 @@ function rulesAllow(origin,target){
 					if (((this.type == 'pawn') && ((this.square.row == 1) || (this.square.row == 8)))){this.type = 'queen'}
 					// Change turn
 					if (white_turn) {white_turn = false} else {white_turn = true}
+
+					// Check if it's checkmate
+				 //  let inverse_color = ''
+				 //  if (this.color == 'white'){inverse_color = 'black'}else{inverse_color = 'white'}
+					// console.log('STARTING\n')
+					
 				}
 			}
 		}
@@ -451,11 +667,12 @@ function createPieces(){
 	kings['white'].set('E',1)
 	kings['black'].set('E',8)
 
+	white_queen = new Piece('white','queen')
+	white_queen.set('D',1)
 
 	new Piece('white','rook').set('A',1)
 	new Piece('white','knight').set('B',1)
 	new Piece('white','bishop').set('C',1)
-	new Piece('white','queen').set('D',1)
 	new Piece('white','bishop').set('F',1)
 	new Piece('white','knight').set('G',1)
 	new Piece('white','rook').set('H',1)
@@ -514,7 +731,9 @@ setSide('white')
 
 document.addEventListener("keypress", function(event) {
   if (event.keyCode == 13) {
-    switchSide()
+    // switchSide()
+    isCheckmate()
+
   }
 });
 
@@ -552,7 +771,7 @@ function Draw(){
 			}
 		}}
 
-
+if(isCheckmate()){alert('Checkmate')}
 
 }
 
