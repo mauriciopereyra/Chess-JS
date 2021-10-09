@@ -19,6 +19,15 @@ var white_pieces = []
 var black_pieces = []
 var white_queen = []
 
+var castlings = {
+'white':{'short':true,'long':true},
+'black':{'short':true,'long':true},
+}
+var original_rooks = []
+var square_under_check = null
+
+var gameOver = false
+
 function unselectAll(){
 	selected_squares = []
 	possible_squares = []
@@ -27,6 +36,7 @@ function unselectAll(){
 
 
 function select(square) { 
+	if (gameOver){return false}
 	let selected_square = squares_map[this.dataset.column][this.dataset.row]
 	// console.log(getPossibleSquares(selected_square))
 
@@ -75,7 +85,48 @@ function select(square) {
 
 
 
+function removePossibleSquaresCheck(square){
+	let piece = square.piece
+	let possible_squares = getPossibleSquares(square)
+	possible_squares = possible_squares.filter(square => (!kingWillBeUnderCheck(piece,square)))
+	// possible_squares = possible_squares.filter(square => ())
 
+	possible_squares = possible_squares.filter(square => {
+		if (piece.type == 'king')
+		{
+			if (square.column == 'C' && square.row == 1){
+				if (kingWillBeUnderCheck(piece,squares_map['D'][1])){
+					return false
+				}
+			}
+			if (square.column == 'G' && square.row == 1){
+				if (kingWillBeUnderCheck(piece,squares_map['F'][1])){
+					return false
+				}
+			}
+			if (square.column == 'C' && square.row == 8){
+				if (kingWillBeUnderCheck(piece,squares_map['D'][8])){
+					return false
+				}
+			}
+			if (square.column == 'G' && square.row == 8){
+				if (kingWillBeUnderCheck(piece,squares_map['F'][8])){
+					return false
+				}
+			}
+
+		}
+
+
+
+
+
+	return true
+	})
+
+	return possible_squares
+
+	}
 
 
 
@@ -138,7 +189,21 @@ function getPossibleSquares(square){
 					blocked = true
 				}
 
-				// remove same color pieces from possible squares
+				// if(kingWillBeUnderCheck(origin.piece,target)){return false}
+
+		    // possible_squares = possible_squares.filter(function(square, index, arr)
+		    // 	{ 
+		    // 		// if (square.column == '' && square.row == ''){
+
+		    // 		// }
+
+		    // 		if (kingWillBeUnderCheck())
+
+
+		    		
+		    // 	});
+
+
 
 				// console.log(output_column)
 				// console.log(output_row)
@@ -206,9 +271,37 @@ function rulesAllow(origin,target){
 
 	// King
 	if (origin.piece.type == 'king') {
-		if ((Math.abs(origin.row-target.row) < 2 && Math.abs(columns_indexes[origin.column]-columns_indexes[target.column]) < 2) ) {
-			return true
+		if (origin.piece.color =='white'){
+			if (target.column == 'C' && target.row == 1){
+				if (castlings['white']['long']){
+					return ['castling','white','long']
+				}
+			}
+			if (target.column == 'G' && target.row == 1){
+				if (castlings['white']['short']){
+					return ['castling','white','short']
+				}
+			}
+		} 
+		else {
+			if (target.column == 'C' && target.row == 8){
+				if (castlings['black']['long']){
+					return ['castling','black','long']
+				}
+			}
+			if (target.column == 'G' && target.row == 8){
+				if (castlings['black']['short']){
+					return ['castling','black','short']
+				}
+			}
 		}
+
+
+			if ((Math.abs(origin.row-target.row) < 2 && Math.abs(columns_indexes[origin.column]-columns_indexes[target.column]) < 2) ) {
+				return true
+			}
+
+
 	}
 
 	// Pawn
@@ -284,7 +377,7 @@ function rulesAllow(origin,target){
 		for (var i = 0; i < pieces.length; i++) {
 			
 			if ((getPossibleSquares(pieces[i].square).includes(king.square)) && (pieces[i].active == true)){
-				kingUnderCheck = true
+				kingUnderCheck = king
 				
 			}
 		}
@@ -305,7 +398,7 @@ function rulesAllow(origin,target){
 
 		// Get old piece
 		old_piece = target.piece
-		// Get old square
+		// Get old squares
 		old_square = piece_to_be_moved.square
 
 		// console.log('STEP 1')
@@ -449,16 +542,16 @@ function rulesAllow(origin,target){
 
 					if(temp_possible_squares[k].piece){
 						if(!pieces[i].color == temp_possible_squares[k].piece.color){
-							console.log('Same color')
-							console.log('Can move')
-							console.log(pieces[i])
-							console.log(temp_possible_squares[k])
+							// console.log('Same color')
+							// console.log('Can move')
+							// console.log(pieces[i])
+							// console.log(temp_possible_squares[k])
 							return false
 						}
 					}else{
-						console.log('Can move')
-						console.log(pieces[i])
-						console.log(temp_possible_squares[k])
+						// console.log('Can move')
+						// console.log(pieces[i])
+						// console.log(temp_possible_squares[k])
 						return false
 					}
 
@@ -494,16 +587,16 @@ function rulesAllow(origin,target){
 
 					if(temp_possible_squares[k].piece){
 						if(!pieces[i].color == temp_possible_squares[k].piece.color){
-							console.log('Same color')
-							console.log('Can move')
-							console.log(pieces[i])
-							console.log(temp_possible_squares[k])
+							// console.log('Same color')
+							// console.log('Can move')
+							// console.log(pieces[i])
+							// console.log(temp_possible_squares[k])
 							return false
 						}
 					}else{
-						console.log('Can move')
-						console.log(pieces[i])
-						console.log(temp_possible_squares[k])
+						// console.log('Can move')
+						// console.log(pieces[i])
+						// console.log(temp_possible_squares[k])
 						return false
 					}
 
@@ -640,23 +733,29 @@ function rulesAllow(origin,target){
 		move (column,row) {
 			// console.log(all_moves)
 
-			if (kingWillBeUnderCheck(this,squares_map[column][row])){
-			alert('You are under check')
-			return false
-			}
-
 
 
 			let moveIsAllowed = rulesAllow(this.square,squares_map[column][row])
 			let enPassant = false
+			let castling = false
 			if (moveIsAllowed){
+				if (kingWillBeUnderCheck(this,squares_map[column][row])){
+				console.log('You can\'t move here. You would be in check')
+				return false
+				}
+
 				if (moveIsAllowed.length) {
-					enPassant = true
+					if (moveIsAllowed[0] == 'enPassant'){
+						enPassant = true
+					}
+					if (moveIsAllowed[0] == 'castling'){
+						castling = true
+					}
 				}
 			}
 
 
-			if (moveIsAllowed && getPossibleSquares(this.square).includes(squares_map[column][row])){
+			if (moveIsAllowed && removePossibleSquaresCheck(this.square).includes(squares_map[column][row])){
 				// If En Passant, remove taken piece
 				if (enPassant){
 					moveIsAllowed[1].piece.active = false
@@ -665,17 +764,58 @@ function rulesAllow(origin,target){
 
 				if (moveIsAllowed){
 
+					function movePiece(piece,column,row){
+						piece.square.piece = null
+						piece.square = squares_map[column][row]
+						piece.square.piece = piece
+					}
+
 					// Add move to history
 					all_moves.push({'piece':this.type,'origin':{'column':this.square.column,'row':this.square.row},'target':{'column':column,'row':parseInt(row)}})
+					
+
+					// Disable castling if king or rook moved
+					if (this.type == 'king'){castlings[this.color]['short'] = false; castlings[this.color]['long'] = false}
+					if (this.type == 'rook')
+						{
+							if (original_rooks.includes(this)){
+								if (this.square.column == 'A'){
+									castlings[this.color]['long'] = false
+								}else{
+									castlings[this.color]['short'] = false
+								}
+							}
+						}
+					let target_piece = squares_map[column][row].piece
+					if (target_piece){
+						if (target_piece.type == 'rook')
+							{
+								if (original_rooks.includes(target_piece)){
+									if (target_piece.square.column == 'A'){
+										castlings[target_piece.color]['long'] = false
+									}else{
+										castlings[target_piece.color]['short'] = false
+									}
+								}
+							}
+					}
+
+					if (castling){
+						if (column == 'C' && row == 1){movePiece(original_rooks.find(rook => {return (rook.square.column == 'A' && rook.square.row == 1)}),'D',1)}
+						if (column == 'G' && row == 1){movePiece(original_rooks.find(rook => {return (rook.square.column == 'H' && rook.square.row == 1)}),'F',1)}
+						if (column == 'C' && row == 8){movePiece(original_rooks.find(rook => {return (rook.square.column == 'A' && rook.square.row == 8)}),'D',8)}
+						if (column == 'G' && row == 8){movePiece(original_rooks.find(rook => {return (rook.square.column == 'H' && rook.square.row == 8)}),'F',8)}
+					}
+
+
 					// Set taken piece as inactive
 					if(squares_map[column][row].piece){squares_map[column][row].piece.active = false}
-					// delete squares_map[column][row].piece
-					this.square.piece = null
 					// Move piece
-					this.square = squares_map[column][row]
-					this.square.piece = this
+					movePiece(this,column,row)
+
 					// Promote pawn to queen
 					if (((this.type == 'pawn') && ((this.square.row == 1) || (this.square.row == 8)))){this.type = 'queen'}
+
 					// Change turn
 					if (white_turn) {white_turn = false} else {white_turn = true}
 
@@ -735,12 +875,16 @@ function createPieces(){
 	white_queen = new Piece('white','queen')
 	white_queen.set('D',1)
 
-	new Piece('white','rook').set('A',1)
+	rook = new Piece('white','rook')
+	rook.set('A',1)
+	original_rooks.push(rook)
 	new Piece('white','knight').set('B',1)
 	new Piece('white','bishop').set('C',1)
 	new Piece('white','bishop').set('F',1)
 	new Piece('white','knight').set('G',1)
-	new Piece('white','rook').set('H',1)
+	rook = new Piece('white','rook')
+	rook.set('H',1)
+	original_rooks.push(rook)
 
 	new Piece('white','pawn').set('A',2)
 	new Piece('white','pawn').set('B',2)
@@ -751,22 +895,26 @@ function createPieces(){
 	new Piece('white','pawn').set('G',2)
 	new Piece('white','pawn').set('H',2)
 
-	// new Piece('black','rook').set('A',8)
-	// new Piece('black','knight').set('B',8)
-	// new Piece('black','bishop').set('C',8)
-	// new Piece('black','queen').set('D',8)
-	// new Piece('black','bishop').set('F',8)
-	// new Piece('black','knight').set('G',8)
-	// new Piece('black','rook').set('H',8)
+	rook = new Piece('black','rook')
+	rook.set('A',8)
+	original_rooks.push(rook)
+	new Piece('black','knight').set('B',8)
+	new Piece('black','bishop').set('C',8)
+	new Piece('black','queen').set('D',8)
+	new Piece('black','bishop').set('F',8)
+	new Piece('black','knight').set('G',8)
+	rook = new Piece('black','rook')
+	rook.set('H',8)
+	original_rooks.push(rook)
 
-	// new Piece('black','pawn').set('A',7)
-	// new Piece('black','pawn').set('B',7)
-	// new Piece('black','pawn').set('C',7)
-	// new Piece('black','pawn').set('D',7)
-	// new Piece('black','pawn').set('E',7)
-	// new Piece('black','pawn').set('F',7)
-	// new Piece('black','pawn').set('G',7)
-	// new Piece('black','pawn').set('H',7)
+	new Piece('black','pawn').set('A',7)
+	new Piece('black','pawn').set('B',7)
+	new Piece('black','pawn').set('C',7)
+	new Piece('black','pawn').set('D',7)
+	new Piece('black','pawn').set('E',7)
+	new Piece('black','pawn').set('F',7)
+	new Piece('black','pawn').set('G',7)
+	new Piece('black','pawn').set('H',7)
 
 }
 
@@ -839,14 +987,42 @@ function Draw(){
 
 
 if(kingUnderCheck()){
-	if(isCheckmate()){alert('Checkmate')}	
-	}else{
-	if(isCheckmate()){alert('Stalemate')}
+
+	square_under_check = kingUnderCheck().square
+	
+	square_under_check.element.classList.add('check')
+
+	if(isCheckmate()){
+		console.log('Checkmate')
+		gameOver = true
+	}	else {console.log('Check')}
+			}
+	else	if(isCheckmate()){
+		console.log('Stalemate')
+		gameOver = true
+		}
+	else{
+		if (square_under_check){
+				square_under_check.element.classList.remove('check')
+				square_under_check.element.classList.remove('check')
+				square_under_check = null}
+	}
+
+
+// Show possible squares
+
+if(selected_squares.length==1){
+	let possibleSquares = removePossibleSquaresCheck(selected_squares[0])
+	possibleSquares.map((square) => {
+  square.element.classList.add('possible')
+	})
+}else{
+	if(document.getElementsByClassName('possible').length > 0){
+		document.getElementsByClassName('possible').map((square) => {
+			square.element.classList.remove('possible')
+		})
+	}
 }
-
-
-
-
 
 
 }
