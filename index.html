@@ -2,11 +2,130 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Chess project</title>
+	<title>Chess</title>
 	<link rel="stylesheet" type="text/css" href="css/styles.css">
 
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<link rel="icon" href="img/favicon.ico" type="image/x-icon">
+
+<!-- 
+<script type="module">
+
+
+	function triggerMouseEvent (node, eventType) {
+	    var clickEvent = document.createEvent ('MouseEvents');
+	    clickEvent.initEvent (eventType, true, true);
+	    node.dispatchEvent (clickEvent);
+	}
+
+
+	import interact from 
+	'https://cdn.interactjs.io/v1.10.11/interactjs/index.js'
+
+
+	function dragMoveListener (event) {
+	  var target = event.target
+	  // keep the dragged position in the data-x/data-y attributes
+	  var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
+	  var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
+
+	  // translate the element
+	  target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
+
+	  // update the posiion attributes
+	  target.setAttribute('data-x', x)
+	  target.setAttribute('data-y', y)
+
+	}
+
+
+	interact('.square')
+	  .dropzone({
+	    ondrop: function (event) {
+			 console.log(event.currentTarget)
+			 console.log(event)
+			 triggerMouseEvent(event.currentTarget, "lla")
+
+	    },
+	  })
+
+
+
+	interact('img.piece')
+	  .draggable({
+	    // inertia: true,
+	    modifiers: [
+	      interact.modifiers.restrictRect({
+	        restriction: '#chessboard',
+	        endOnly: true
+	      })
+	    ],
+	    autoScroll: true,
+	    // dragMoveListener from the dragging demo above
+	    listeners: { move: dragMoveListener }
+	  })
+
+</script>
+
+ -->
+
+
+
+
+<script>
+//Make the DIV element draggagle:
+let pieces = document.querySelectorAll('.square img.piece')
+
+	for (var i = 0; i < pieces.length; i++) {
+		dragElement(pieces[i])
+	}
+
+
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById(elmnt.id)) {
+    /* if present, the header is where you move the DIV from:*/
+    document.getElementById(elmnt.id).onmousedown = dragMouseDown;
+  } else {
+    /* otherwise, move the DIV from anywhere inside the DIV:*/
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    /* stop moving when mouse button is released:*/
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+</script>
+
+
 
 <script src="js/main.js"></script>
 

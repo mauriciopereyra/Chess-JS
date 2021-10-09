@@ -1,5 +1,6 @@
 function main(){
 
+
 var all_squares = [[],[],[],[],[],[],[],[]]
 var rows = [1,2,3,4,5,6,7,8].reverse()
 var columns = ['A','B','C','D','E','F','G','H']
@@ -28,6 +29,10 @@ var square_under_check = null
 
 var gameOver = false
 
+function aca(square){
+	select(this)
+}
+
 function unselectAll(){
 	selected_squares = []
 	possible_squares = []
@@ -37,6 +42,7 @@ function unselectAll(){
 
 function select(square) { 
 	if (gameOver){return false}
+	// console.log(this.firstChild.x)
 	let selected_square = squares_map[this.dataset.column][this.dataset.row]
 	// console.log(getPossibleSquares(selected_square))
 
@@ -439,10 +445,13 @@ function rulesAllow(origin,target){
 
 		for (var i = 0; i < pieces.length; i++) {
 			
-			if ((getPossibleSquares(pieces[i].square).includes(king.square)) && (pieces[i].active == true)){
+			if ((getPossibleSquares(pieces[i].square).includes(king.square)) && (pieces[i].active == true) ) {
 				willBeUnderCheck = true
 				
 			}
+
+
+
 		}
 
 
@@ -521,6 +530,39 @@ function rulesAllow(origin,target){
 	// 	return true
 	// }
 
+function reallyCheckmate(){
+		let pieces
+
+		if (white_turn){
+			pieces = white_pieces
+		}else{
+			pieces = black_pieces
+		}	
+		pieces = pieces.filter(piece => piece.active)
+
+
+
+		// Check if king can take attacking piece and won't be under check again
+		let temp_possible_squares = removePossibleSquaresCheck(square_under_check)
+		if (temp_possible_squares.length == 0){return true}
+		for (var i = 0; i < temp_possible_squares.length; i++) {
+			if (temp_possible_squares[i].length > 0){
+				for (var j = 0; j < pieces.length; j++) {
+					if(getPossibleSquares(pieces[j]).includes.kingUnderCheck().square){
+						return true
+					}
+				}
+			}
+		}
+		return false
+}
+
+
+
+
+
+
+
 
 	function isCheckmate(){
 		let pieces
@@ -535,21 +577,22 @@ function rulesAllow(origin,target){
 
 		for (var i = 0; i < pieces.length; i++) {
 			let temp_possible_squares = getPossibleSquares(pieces[i].square)
-			// console.log(temp_possible_squares)
 
 			for (var k = 0; k < temp_possible_squares.length; k++) {
+				// console.log(pieces[i])
+				// console.log(temp_possible_squares[k])
 				if(!kingWillBeUnderCheck(pieces[i],temp_possible_squares[k])){
 
 					if(temp_possible_squares[k].piece){
 						if(!pieces[i].color == temp_possible_squares[k].piece.color){
 							// console.log('Same color')
-							// console.log('Can move')
+							console.log('Can move')
 							// console.log(pieces[i])
 							// console.log(temp_possible_squares[k])
 							return false
 						}
 					}else{
-						// console.log('Can move')
+						// console.log('Can move2')
 						// console.log(pieces[i])
 						// console.log(temp_possible_squares[k])
 						return false
@@ -668,10 +711,22 @@ function rulesAllow(origin,target){
 			this.piece = null
 
 			this.img = document.createElement('img')
+			this.img.setAttribute('draggable', true);
 
 			this.element.appendChild(this.img)
 
-			this.element.addEventListener("click", select)
+			// this.element.addEventListener("click", select)
+			this.element.addEventListener("lla", select)
+			// this.element.addEventListener("mouseup", select)
+			this.element.addEventListener("mousedown", select)
+
+      // this.img.addEventListener('dragstart', aca);
+      // this.img.addEventListener('drag', aca);
+      // this.img.addEventListener('dragenter', aca);
+      // this.img.addEventListener('dragover', aca);
+      // this.img.addEventListener('dragleave', aca);
+      // this.img.addEventListener('drop', aca);
+      // this.img.addEventListener('dragend', aca);
 
 			this.selected = false
 
@@ -701,6 +756,11 @@ function rulesAllow(origin,target){
 				if (this.piece.active) {
 					this.img.className = ''
 					this.img.classList.add(`${this.piece.color}-${this.piece.type}`)
+					this.img.classList.add('piece')
+					this.img.style = ''
+					this.img.dataset['x'] = 0
+					this.img.dataset['y'] = 0
+					this.img.innerHTML = ''
 				}
 			} else {
 				this.img.className = ''
@@ -992,9 +1052,18 @@ if(kingUnderCheck()){
 	
 	square_under_check.element.classList.add('check')
 
+
 	if(isCheckmate()){
-		console.log('Checkmate')
-		gameOver = true
+
+
+		if (!reallyCheckmate()){
+			console.log('Check')
+		}else{
+			console.log('Checkmate')
+			gameOver = true
+		}
+
+
 	}	else {console.log('Check')}
 			}
 	else	if(isCheckmate()){
