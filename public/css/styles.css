@@ -1,0 +1,111 @@
+.square {
+	height: 100px;
+	width: 100px;
+	display: inline-block;
+}
+
+.square-dark {
+	background: gray;
+}
+
+.square-light {
+	background: lightgray;
+}
+
+#status {
+    width: 800px;
+    text-align: center;
+}
+
+#status h1 {
+	width: 50%;
+	display: inline-block;
+}
+
+#chessboard {
+    width: 800px;
+    display: grid;
+    grid-template-columns: repeat(8, 100px);
+    grid-template-rows: repeat(8, 100px);
+}
+
+
+.possible img{
+	/*background: skyblue;*/
+	background-color: rgba(160, 190, 255, 0.5);
+}
+
+.blocking {
+	background: red;
+}
+.check {
+	background: red;
+}
+.selected {
+	background: orange;
+}
+
+/* Pieces images */
+
+.square img{
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+
+
+
+
+.white-pawn {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/0/04/Chess_plt60.png");
+}
+
+.black-pawn {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/c/cd/Chess_pdt60.png");
+}
+
+.white-bishop {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/9/9b/Chess_blt60.png");
+}
+
+.black-bishop {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/8/81/Chess_bdt60.png");
+}
+
+.white-king {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/3/3b/Chess_klt60.png");
+}
+
+.black-king {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/e/e3/Chess_kdt60.png");
+}
+
+.white-knight {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/2/28/Chess_nlt60.png");
+}
+
+.black-knight {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/f/f1/Chess_ndt60.png");
+}
+
+.white-queen {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/4/49/Chess_qlt60.png");
+}
+
+.black-queen {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/a/af/Chess_qdt60.png");
+}
+
+.white-rook {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/5/5c/Chess_rlt60.png");
+}
+
+.black-rook {
+	background:url("https://upload.wikimedia.org/wikipedia/commons/a/a0/Chess_rdt60.png");
+}
+
+.square img {
+	width: 100%;
+	height: 100%;
+}

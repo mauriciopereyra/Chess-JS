@@ -1,0 +1,23 @@
+{
+  "name": "chess",
+  "version": "1.0.0",
+  "description": "Chess made with plain Javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "console.log(\"likoi\")"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mauriciopereyra/Chess-JS.git"
+  },
+  "author": "Mauricio Pereyra",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mauriciopereyra/Chess-JS/issues"
+  },
+  "homepage": "https://github.com/mauriciopereyra/Chess-JS#readme",
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.1"
+  }
+}
