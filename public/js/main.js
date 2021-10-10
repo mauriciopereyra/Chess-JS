@@ -1,5 +1,3 @@
-function main(){
-
 var piecesImg = {
 	'white-pawn' : "https://upload.wikimedia.org/wikipedia/commons/0/04/Chess_plt60.png",
 	'black-pawn' : "https://upload.wikimedia.org/wikipedia/commons/c/cd/Chess_pdt60.png",
@@ -16,7 +14,43 @@ var piecesImg = {
 }
 
 
+const socket = io("http://localhost:3000")
+var playerColor = ''
 
+let url = new URL(location);
+let searchParams = new URLSearchParams(url.search);
+
+socket.emit('joinRoom',searchParams.get('room'))
+
+
+socket.on('updateMove',(origin,target,id, all_saved_moves) => {
+	// If its already updated to last move, no need to move again
+	if (all_saved_moves.length !== all_moves.length){
+		updateMove(origin,target)
+	}
+})
+
+socket.on('updateAllMoves',(all_moves) => {
+	updateAllMoves(all_moves)
+})
+
+socket.on('player-connect', (playerIndex) => {
+	console.log('This user connected '+playerIndex)
+})
+
+socket.on('player-color', (playerIndex) => {
+	if (playerIndex == 0){
+		document.querySelector('#status h2').innerHTML = "You play as white"
+		playerColor = 'white'
+	} else if (playerIndex == 1){
+		document.querySelector('#status h2').innerHTML = "You play as black"
+		playerColor = 'black'
+		setSide('black')
+	} else {
+		document.querySelector('#status h2').innerHTML = "You are spectator"
+		playerColor = 'spectator'
+	}
+})
 
 
 var all_squares = [[],[],[],[],[],[],[],[]]
@@ -26,6 +60,7 @@ var columns_indexes = {'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8}
 var squares_map = {}
 var white_turn = true
 var all_moves = []
+var number_moves = 0
 var white_side = true
 
 var selected_squares = []
@@ -60,9 +95,19 @@ function unselectAll(){
 
 function select(square) { 
 	if (gameOver){return false}
+
 	// console.log(this.firstChild.x)
 	let selected_square = squares_map[this.dataset.column][this.dataset.row]
 	// console.log(getPossibleSquares(selected_square))
+
+	// Don't allow to move if player is not same color than piece
+	if (selected_square.piece && selected_squares.length == 0){
+		// console.log(selected_square.piece.color)
+		// console.log(playerColor)
+		if (selected_square.piece.color !== playerColor){
+			return false
+		}
+	}
 
 	if (selected_squares.includes(selected_square)){
 		// If player selected this square before, unselect it
@@ -105,7 +150,7 @@ function select(square) {
 
 
 function setStatus(message){
-	console.log(message)
+	// console.log(message)
 	document.querySelector("#status h1").innerHTML = message
 }
 
@@ -824,7 +869,7 @@ function reallyCheckmate(){
 			// console.log(all_moves)
 
 
-
+			let old_square = this.square
 			let moveIsAllowed = rulesAllow(this.square,squares_map[column][row])
 			let enPassant = false
 			let castling = false
@@ -909,10 +954,8 @@ function reallyCheckmate(){
 					// Change turn
 					if (white_turn) {white_turn = false} else {white_turn = true}
 
-					// Check if it's checkmate
-				 //  let inverse_color = ''
-				 //  if (this.color == 'white'){inverse_color = 'black'}else{inverse_color = 'white'}
-					// console.log('STARTING\n')
+					socket.emit('pieceMoved',[old_square.column,old_square.row],[this.square.column,this.square.row],socket.id,all_moves)
+
 					
 				}
 			}
@@ -952,6 +995,8 @@ function reallyCheckmate(){
 
 
 	///////
+
+
 
 
 
@@ -1029,13 +1074,11 @@ function setSide(color){
 	Draw()
 }
 
-setSide('white')
+
 
 
 document.addEventListener("keypress", function(event) {
   if (event.keyCode == 13) {
-    // switchSide()
-    console.log(kingUnderCheck())
 
   }
 });
@@ -1043,6 +1086,18 @@ document.addEventListener("keypress", function(event) {
 
 
 function Draw(){
+		for (var i = 0; i < squares_map.length; i++) {
+
+		}
+
+	if (number_moves === all_moves.length){
+	} else {
+		// socket.emit('pieceMoved',squares_map,white_turn)
+
+
+
+		number_moves ++
+	}
 
 
 	// Drawing squares
@@ -1102,7 +1157,9 @@ if(kingUnderCheck()){
 		}
 	else{
 
-		if (white_turn){
+		if (playerColor == 'spectator'){
+			setStatus('')
+		} else if ((white_turn && playerColor == 'white') || (!white_turn && playerColor == 'black')){
 				setStatus('Your turn')
 		} else {
 				setStatus('Waiting for opponent')
@@ -1131,8 +1188,30 @@ if(selected_squares.length==1){
 }
 
 
+	// Show last move
+
+
+
+
+
+
+
+
+}
+
+function updateMove(origin,target){
+
+	squares_map[origin[0]][origin[1]].piece.move(target[0],target[1])
+	Draw()
 }
 
 
+function updateAllMoves(all_moves){
+	for (var i = 0; i < all_moves.length; i++) {
+		squares_map[all_moves[i].origin.column][all_moves[i].origin.row].piece.move(all_moves[i].target.column,all_moves[i].target.row)	
+	}
+
+
+	Draw()
 
 }
