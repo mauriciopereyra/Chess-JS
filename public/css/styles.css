@@ -1,6 +1,64 @@
+:root {
+  --size: 800px;
+}
+
+#wrapper-status {
+  display: inline-table;
+  position: absolute;
+  top: 0;
+  height: 800px;
+  width: 380px;
+}
+
+#wrapper-status2 {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+#status
+ {
+ 	text-align: center;
+	background: red;
+}
+
+#turn-bottom, #turn-top {
+	height: 55px;
+}
+
+#turn-bottom, #turn-top, #status {
+	width: 350px;
+	display: inline-block;
+	margin: 0 15px;
+}
+
+
+
+#wrapper {
+    width: var(--size);
+    text-align: center;
+    font-size: 1.5rem;
+    display: inline-block;
+    float: left;
+}
+
+#welcome {
+    position: absolute;
+    top: calc(var(--size) / 3.1);
+    left: calc(var(--size) / 7.1);
+    background: #7cccf1;
+    padding: 55px;
+    padding-top: 0;
+    border-radius: 5%;
+    border: solid #4a93b5;
+}
+#welcome button{
+	font-size: 2rem;
+	margin: 12px 15px 0 15px;
+}
+
 .square {
-	height: 100px;
-	width: 100px;
+	height: calc(var(--size) / 8);
+	width: calc(var(--size) / 8);
 	display: inline-block;
 }
 
@@ -12,10 +70,6 @@
 	background: lightgray;
 }
 
-#status {
-    width: 800px;
-    text-align: center;
-}
 
 #status h1 {
 	width: 50%;
@@ -23,10 +77,10 @@
 }
 
 #chessboard {
-    width: 800px;
+	width: 100%;
     display: grid;
-    grid-template-columns: repeat(8, 100px);
-    grid-template-rows: repeat(8, 100px);
+    grid-template-columns: repeat(8, calc(var(--size) / 8));
+    grid-template-rows: repeat(8, calc(var(--size) / 8));
 }
 
 
@@ -109,3 +163,34 @@
 	width: 100%;
 	height: 100%;
 }
+
+#moves {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    position: relative;
+    overflow-y: auto;
+    align-content: flex-start;
+    will-change: scroll-position;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    line-height: 1.7;
+    font-size: 1.1em;
+    height: calc(29px * 4);
+}
+
+.move {
+	flex: 0 0 37%;
+    padding-left: 0.7em;
+}
+
+.move-order{
+    flex: 0 0 16.666%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    background: #f7f6f5;
+  }
+
+

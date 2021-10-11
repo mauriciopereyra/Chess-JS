@@ -16,11 +16,17 @@ var piecesImg = {
 
 const socket = io("http://localhost:3000")
 var playerColor = ''
+var gameStarted = true
 
 let url = new URL(location);
 let searchParams = new URLSearchParams(url.search);
 
-socket.emit('joinRoom',searchParams.get('room'))
+if (searchParams){
+	socket.emit('joinRoom',searchParams.get('room'))
+} else {
+	socket.emit('joinRoom','new')
+}
+
 
 
 socket.on('updateMove',(origin,target,id, all_saved_moves) => {
@@ -40,14 +46,14 @@ socket.on('player-connect', (playerIndex) => {
 
 socket.on('player-color', (playerIndex) => {
 	if (playerIndex == 0){
-		document.querySelector('#status h2').innerHTML = "You play as white"
+		// document.querySelector('#status h2').innerHTML = "You play as white"
 		playerColor = 'white'
 	} else if (playerIndex == 1){
-		document.querySelector('#status h2').innerHTML = "You play as black"
+		// document.querySelector('#status h2').innerHTML = "You play as black"
 		playerColor = 'black'
 		setSide('black')
 	} else {
-		document.querySelector('#status h2').innerHTML = "You are spectator"
+		// document.querySelector('#status h2').innerHTML = "You are spectator"
 		playerColor = 'spectator'
 	}
 })
@@ -95,6 +101,7 @@ function unselectAll(){
 
 function select(square) { 
 	if (gameOver){return false}
+	if (!gameStarted){return false}
 
 	// console.log(this.firstChild.x)
 	let selected_square = squares_map[this.dataset.column][this.dataset.row]
@@ -954,6 +961,9 @@ function reallyCheckmate(){
 					// Change turn
 					if (white_turn) {white_turn = false} else {white_turn = true}
 
+					var elem = document.getElementById('moves');
+					elem.scrollTop = elem.scrollHeight;
+
 					socket.emit('pieceMoved',[old_square.column,old_square.row],[this.square.column,this.square.row],socket.id,all_moves)
 
 					
@@ -1158,11 +1168,15 @@ if(kingUnderCheck()){
 	else{
 
 		if (playerColor == 'spectator'){
-			setStatus('')
+			// setStatus('')
 		} else if ((white_turn && playerColor == 'white') || (!white_turn && playerColor == 'black')){
-				setStatus('Your turn')
+				// setStatus('Your turn')
+					document.querySelector('#turn-top p').innerHTML = ""
+					document.querySelector('#turn-bottom p').innerHTML = "Your turn"
 		} else {
-				setStatus('Waiting for opponent')
+				// setStatus('Waiting for opponent')
+					document.querySelector('#turn-top p').innerHTML = "Waiting for opponent"
+					document.querySelector('#turn-bottom p').innerHTML = ""
 		}
 
 		if (square_under_check){
