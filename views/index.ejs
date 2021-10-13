@@ -32,8 +32,20 @@
 		<h1>Chess Javascript</h1>
 		<h2>Who you want to play against?</h2>
 		<button>Computer</button>
-		<button>Friend</button>
+		<button onclick="playFriend()">Friend</button>
 	</div>
+
+	<div id="welcome1">
+		<h2>What's your name</h2>
+		<input type="text" name="name"><br><br>
+		<button onclick="setName()">Play</button>
+	</div>
+	<div id="welcome2">
+		<h2>Your friend is not connected</h2>
+		<h3>Please share this link with him to play:</h3>
+		<a id="room-link"></a>
+	</div>
+
 	<div id="chessboard">
 
 	</div>
@@ -44,17 +56,14 @@
 	<div id="wrapper-status2">
 		<div id="turn-top"><p></p></div>
 		<div id="status">
+			<div id="name-top">Tito</div>
 			<div id="moves">
-				<div class="move-order">1</div><div class="move">asdas</div><div class="move">asda</div>
-				<div class="move-order">1</div><div class="move">asdas</div><div class="move">asda</div>
-				<div class="move-order">1</div><div class="move">asdas</div><div class="move">asda</div>
-				<div class="move-order">1</div><div class="move">asdas</div><div class="move">asda</div>
-				<div class="move-order">1</div><div class="move">asdas</div><div class="move">asda</div>
-				<div class="move-order">1</div><div class="move">asdas</div><div class="move">asda</div>
-				<div class="move-order">1</div><div class="move">asdas</div><div class="move">asda</div>
+				<a id="first-message">
+				</a>
 			</div>
+			<div id="name-bottom">Rolo</div>
 		</div>
-		<div id="turn-bottom"><p></p></div>
+		<div id="turn-bottom"><p></p><button style="display:none" onclick="restart()">Play again</button></div>
 	</div>
 </div>
 

@@ -3,11 +3,11 @@
 }
 
 #wrapper-status {
-  display: inline-table;
-  position: absolute;
-  top: 0;
-  height: 800px;
-  width: 380px;
+    display: none;
+    position: absolute;
+    top: 260px;
+    height: 400px;
+    width: 380px;
 }
 
 #wrapper-status2 {
@@ -18,7 +18,7 @@
 #status
  {
  	text-align: center;
-	background: red;
+    background: #f7f6f5;
 }
 
 #turn-bottom, #turn-top {
@@ -41,7 +41,9 @@
     float: left;
 }
 
-#welcome {
+#welcome,#welcome1,#welcome2 {
+/*    width: 591px;
+    height: 306px;*/
     position: absolute;
     top: calc(var(--size) / 3.1);
     left: calc(var(--size) / 7.1);
@@ -50,8 +52,11 @@
     padding-top: 0;
     border-radius: 5%;
     border: solid #4a93b5;
+    display: none;
 }
-#welcome button{
+
+
+#welcome button, #welcome1 button, #welcome2 button, #welcome input, #welcome1 input, #welcome2 input{
 	font-size: 2rem;
 	margin: 12px 15px 0 15px;
 }
@@ -164,13 +169,15 @@
 	height: 100%;
 }
 
+
+
 #moves {
     display: flex;
     flex-flow: row wrap;
     align-items: center;
     position: relative;
     overflow-y: auto;
-    align-content: flex-start;
+    align-content: center;
     will-change: scroll-position;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -179,6 +186,12 @@
     font-size: 1.1em;
     height: calc(29px * 4);
 }
+
+div:has(> div) {
+    align-content: flex-start;
+}
+
+
 
 .move {
 	flex: 0 0 37%;
@@ -190,7 +203,10 @@
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    background: #f7f6f5;
+    background: lightgray;
   }
 
-
+#name-top, #name-bottom {
+    background: #9aefe8;
+    padding: 5px 0 5px;
+}

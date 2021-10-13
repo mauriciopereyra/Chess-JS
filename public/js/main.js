@@ -1,3 +1,4 @@
+
 var piecesImg = {
 	'white-pawn' : "https://upload.wikimedia.org/wikipedia/commons/0/04/Chess_plt60.png",
 	'black-pawn' : "https://upload.wikimedia.org/wikipedia/commons/c/cd/Chess_pdt60.png",
@@ -18,45 +19,7 @@ const socket = io("http://localhost:3000")
 var playerColor = ''
 var gameStarted = true
 
-let url = new URL(location);
-let searchParams = new URLSearchParams(url.search);
 
-if (searchParams){
-	socket.emit('joinRoom',searchParams.get('room'))
-} else {
-	socket.emit('joinRoom','new')
-}
-
-
-
-socket.on('updateMove',(origin,target,id, all_saved_moves) => {
-	// If its already updated to last move, no need to move again
-	if (all_saved_moves.length !== all_moves.length){
-		updateMove(origin,target)
-	}
-})
-
-socket.on('updateAllMoves',(all_moves) => {
-	updateAllMoves(all_moves)
-})
-
-socket.on('player-connect', (playerIndex) => {
-	console.log('This user connected '+playerIndex)
-})
-
-socket.on('player-color', (playerIndex) => {
-	if (playerIndex == 0){
-		// document.querySelector('#status h2').innerHTML = "You play as white"
-		playerColor = 'white'
-	} else if (playerIndex == 1){
-		// document.querySelector('#status h2').innerHTML = "You play as black"
-		playerColor = 'black'
-		setSide('black')
-	} else {
-		// document.querySelector('#status h2').innerHTML = "You are spectator"
-		playerColor = 'spectator'
-	}
-})
 
 
 var all_squares = [[],[],[],[],[],[],[],[]]
@@ -68,6 +31,10 @@ var white_turn = true
 var all_moves = []
 var number_moves = 0
 var white_side = true
+var white_name = ''
+var black_name = ''
+var myName = ''
+var rivalName = ''
 
 var selected_squares = []
 var possible_squares = []
@@ -97,6 +64,169 @@ function unselectAll(){
 	possible_squares = []
 	blocking_squares = []
 }
+
+
+let url = new URL(location);
+let searchParams = new URLSearchParams(url.search);
+
+if (searchParams.get("room")){
+	socket.emit('joinRoom',searchParams.get('room'))
+	socket.emit('setName',document.cookie.split('name=')[0])
+	socket.emit('askRivalName')
+} else {
+	gameStarted = false
+}
+
+
+function restart(){
+	socket.emit('restart')
+}
+
+socket.on('restartGame',() => {
+	if (playerColor == 'white'){
+	playerColor = 'black'
+		} else {
+	playerColor = 'white'
+		}
+	gameStarted = true
+	gameOver = false
+	white_pieces = []
+	black_pieces = []
+	squares_map = {}
+	white_turn = true
+	all_moves = []
+	updateMovesList([])
+	createSquares()
+	createPieces()
+	setSide(playerColor)
+	Draw()
+})
+
+
+
+
+function setName(){
+	room = document.getElementsByName('name')[0]
+	if (room.value.length == 0){
+		alert('Please enter your name')
+	} else {
+		document.cookie = `name=${room.value}`;
+		socket.emit('setName',room,playerColor)
+		if (playerColor == 'white'){white_name = document.cookie.split('name=')[1]} else {black_name = document.cookie.split('name=')[1]}
+		Draw()
+		if (searchParams.get("room")){
+			document.getElementById('welcome1').style.display = 'none'
+		} else {
+			let randomstring = Math.random().toString(36).slice(-8);
+			window.location.href = `/?room=${randomstring}`;
+		}
+	}
+}
+
+
+socket.on('setNames', (name,color) => {
+	if (color == 'white'){
+		white_name = name
+	} else {
+		black_name = name
+	}
+})
+
+socket.on('getRivalName',() => {
+	socket.emit('setRivalName',myName)
+})
+
+socket.on('setRivalName2',(name) => {
+	rivalName = name
+	console.log('aca')
+})
+
+
+
+
+function playFriend(){
+	document.getElementById('welcome').style.display = 'none'
+	document.getElementById('welcome1').style.display = 'initial'
+}
+
+
+socket.on('kick', () => {
+		window.location.href = "/";
+})
+
+socket.on('waitingForRival', () => {
+		document.getElementById('welcome2').style.display = 'initial'
+		document.getElementById('room-link').innerHTML = window.location
+		gameStarted = false
+})
+
+socket.on('rivalConnected', () => {
+		document.getElementById('welcome2').style.display = 'none'
+		gameStarted = true
+		socket.emit('askRivalName')
+		Draw()
+})
+
+socket.on('updateMove',(origin,target,id, all_saved_moves) => {
+	// If its already updated to last move, no need to move again
+	if (all_saved_moves.length !== all_moves.length){
+		updateMove(origin,target)
+	}
+})
+
+socket.on('updateAllMoves',(all_moves) => {
+	updateAllMoves(all_moves)
+})
+
+socket.on('player-connect', (playerIndex) => {
+	console.log('This user connected '+playerIndex)
+})
+
+socket.on('player-color', (playerIndex) => {
+	if (playerIndex == 0){
+		// document.querySelector('#status h2').innerHTML = "You play as white"
+		playerColor = 'white'
+	} else if (playerIndex == 1){
+		// document.querySelector('#status h2').innerHTML = "You play as black"
+		playerColor = 'black'
+		setSide('black')
+	} else {
+		// document.querySelector('#status h2').innerHTML = "You are spectator"
+		playerColor = 'spectator'
+	}
+		try {document.querySelector('#status a').innerHTML = `You play as ${playerColor}`} catch {}
+		Draw()
+})
+
+function updateMovesList(all_moves){
+	moves_element = document.getElementById("moves")
+	moves_element.innerHTML = ''
+
+		for (var i = 0; i < all_moves.length; i++) {
+			if (i % 2 == 0){
+				let div = document.createElement('div')
+				div.classList.add('move-order')
+				div.innerHTML = i / 2 + 1
+				moves_element.appendChild(div)
+			} 
+				let div2 = document.createElement('div')
+				div2.innerHTML = `${all_moves[i].origin.column}${all_moves[i].origin.row}-${all_moves[i].target.column}${all_moves[i].target.row}`
+				div2.classList.add('move')
+				moves_element.appendChild(div2)
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 function select(square) { 
@@ -158,7 +288,8 @@ function select(square) {
 
 function setStatus(message){
 	// console.log(message)
-	document.querySelector("#status h1").innerHTML = message
+	// document.querySelector("#status h1").innerHTML = message
+	console.log(message)
 }
 
 
@@ -753,103 +884,99 @@ function reallyCheckmate(){
 
 
 
+class Square {
+	constructor (index, column, row) {
+		this.row = row
+		this.column = column
 
+		this.white = (index % 8 + parseInt(index / 8 % 2 ) ) % 2
+		this.element = document.createElement("div")
+		this.element.dataset.row = this.row
+		this.element.dataset.column = this.column
+		this.element.classList.add('square')
 
-
-
-
-
-
-
-
-
-
-
-
-
-	class Square {
-		constructor (index, column, row) {
-			this.row = row
-			this.column = column
-
-			this.white = (index % 8 + parseInt(index / 8 % 2 ) ) % 2
-			this.element = document.createElement("div")
-			this.element.dataset.row = this.row
-			this.element.dataset.column = this.column
-			this.element.classList.add('square')
-
-			if (this.white) {
-				this.element.classList.add('square-dark')
-			} else {
-				this.element.classList.add('square-light')
-			}
-
-			this.piece = null
-
-			this.img = document.createElement('img')
-			// this.img.setAttribute('draggable', true);
-
-			this.element.appendChild(this.img)
-
-			// this.element.addEventListener("click", select)
-			this.element.addEventListener("lla", select)
-			// this.element.addEventListener("mouseup", select)
-			this.element.addEventListener("mousedown", select)
-
-      // this.img.addEventListener('dragstart', aca);
-      // this.img.addEventListener('drag', aca);
-      // this.img.addEventListener('dragenter', aca);
-      // this.img.addEventListener('dragover', aca);
-      // this.img.addEventListener('dragleave', aca);
-      // this.img.addEventListener('drop', aca);
-      // this.img.addEventListener('dragend', aca);
-
-			this.selected = false
-
+		if (this.white) {
+			this.element.classList.add('square-dark')
+		} else {
+			this.element.classList.add('square-light')
 		}
 
-		update_img () {
+		this.piece = null
 
-			if (selected_squares.includes(this)){
-				this.element.classList.add("selected") 
-			} else {
-				this.element.classList.remove("selected") 
-			}
+		this.img = document.createElement('img')
+		// this.img.setAttribute('draggable', true);
 
-			if (possible_squares.includes(this)){
-				this.element.classList.add("possible") 
-			} else {
-				this.element.classList.remove("possible") 
-			}
+		this.element.appendChild(this.img)
 
-			if (blocking_squares.includes(this)){
-				this.element.classList.add("blocking") 
-			} else {
-				this.element.classList.remove("blocking") 
-			}
+		// this.element.addEventListener("click", select)
+		this.element.addEventListener("lla", select)
+		// this.element.addEventListener("mouseup", select)
+		this.element.addEventListener("mousedown", select)
 
-			if (this.piece){
-				if (this.piece.active) {
-					this.img.className = ''
-					this.img.classList.add(`${this.piece.color}-${this.piece.type}`)
-					this.img.classList.add('piece')
-					this.img.style = ''
-					this.img.dataset['x'] = 0
-					this.img.dataset['y'] = 0
-					this.img.innerHTML = ''
-					// this.img.src = piecesImg[`${this.piece.color}-${this.piece.type}`]
-					// this.img.style.visibility = "visible"
-				}
-			} else {
-				this.img.className = ''
-				if(this.img.src){
-					// this.img.removeAttribute('src')
-					// this.img.style.visibility = "hidden"
-				}
-			}
-		}
+  // this.img.addEventListener('dragstart', aca);
+  // this.img.addEventListener('drag', aca);
+  // this.img.addEventListener('dragenter', aca);
+  // this.img.addEventListener('dragover', aca);
+  // this.img.addEventListener('dragleave', aca);
+  // this.img.addEventListener('drop', aca);
+  // this.img.addEventListener('dragend', aca);
+
+		this.selected = false
 
 	}
+
+	update_img () {
+
+		if (selected_squares.includes(this)){
+			this.element.classList.add("selected") 
+		} else {
+			this.element.classList.remove("selected") 
+		}
+
+		if (possible_squares.includes(this)){
+			this.element.classList.add("possible") 
+		} else {
+			this.element.classList.remove("possible") 
+		}
+
+		if (blocking_squares.includes(this)){
+			this.element.classList.add("blocking") 
+		} else {
+			this.element.classList.remove("blocking") 
+		}
+
+		if (this.piece){
+			if (this.piece.active) {
+				this.img.className = ''
+				this.img.classList.add(`${this.piece.color}-${this.piece.type}`)
+				this.img.classList.add('piece')
+				this.img.style = ''
+				this.img.dataset['x'] = 0
+				this.img.dataset['y'] = 0
+				this.img.innerHTML = ''
+				// this.img.src = piecesImg[`${this.piece.color}-${this.piece.type}`]
+				// this.img.style.visibility = "visible"
+			}
+		} else {
+			this.img.className = ''
+			if(this.img.src){
+				// this.img.removeAttribute('src')
+				// this.img.style.visibility = "hidden"
+			}
+		}
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -962,10 +1089,11 @@ function reallyCheckmate(){
 					if (white_turn) {white_turn = false} else {white_turn = true}
 
 					var elem = document.getElementById('moves');
-					elem.scrollTop = elem.scrollHeight;
+
+					updateMovesList(all_moves)
 
 					socket.emit('pieceMoved',[old_square.column,old_square.row],[this.square.column,this.square.row],socket.id,all_moves)
-
+					document.getElementById('moves').style['align-content'] = 'flex-start'
 					
 				}
 			}
@@ -980,27 +1108,31 @@ function reallyCheckmate(){
 
 	// Creating squares
 
-	chessboard = document.getElementById('chessboard')
+	function createSquares(){
+		chessboard = document.getElementById('chessboard')
 
-	index = 0
+		index = 0
 
-	for (var j = 0; j < rows.length; j++) {
-		for (var i = 0; i < columns.length; i++) {
-			
-			if (!squares_map[columns[i]]){
-				squares_map[columns[i]] = {}
+		for (var j = 0; j < rows.length; j++) {
+			for (var i = 0; i < columns.length; i++) {
+				
+				if (!squares_map[columns[i]]){
+					squares_map[columns[i]] = {}
+				}
+
+				new_square = new Square(index, columns[i], rows[j])
+
+				squares_map[columns[i]][rows[j]] = new_square
+
+				index ++
+
+
 			}
-
-			new_square = new Square(index, columns[i], rows[j])
-
-			squares_map[columns[i]][rows[j]] = new_square
-
-			index ++
-
-
 		}
+
 	}
 
+	createSquares()
 
 
 
@@ -1089,13 +1221,27 @@ function setSide(color){
 
 document.addEventListener("keypress", function(event) {
   if (event.keyCode == 13) {
-
+		socket.emit('askRivalName')
+		Draw()
   }
 });
 
 
 
 function Draw(){
+
+	if (searchParams.get("room")){
+		document.getElementById('wrapper-status').style.display = 'inline-block'}
+
+
+	 if (!gameStarted) {
+		document.getElementById('welcome').style.display = 'none'
+		if (myName == ''){
+			document.getElementById('welcome1').style.display = 'initial'
+		}
+	}
+
+
 		for (var i = 0; i < squares_map.length; i++) {
 
 		}
@@ -1155,29 +1301,83 @@ if(kingUnderCheck()){
 			setStatus('Check')
 		}else{
 			setStatus('Checkmate')
+
+			document.querySelector('#turn-top p').style.visibility = 'hidden'
+			document.querySelector('#turn-bottom p').style.visibility = 'visible'
+
+			document.querySelector('#turn-bottom button').style.display = 'initial'
+
+			if ((white_turn) && (playerColor == 'white')){
+				document.querySelector('#turn-bottom p').innerHTML = "Checkmate. You lost."
+			} else if ((!white_turn) && (playerColor == 'white')){
+				document.querySelector('#turn-bottom p').innerHTML = "Checkmate. You won!"
+			} else if ((white_turn) && (playerColor == 'black')){
+				document.querySelector('#turn-bottom p').innerHTML = "Checkmate. You won!"
+			} else if ((!white_turn) && (playerColor == 'black')){
+				document.querySelector('#turn-bottom p').innerHTML = "Checkmate. You lost."
+			}
+
+
 			gameOver = true
 		}
 
 
-	}	else {setStatus('Check')}
+	}	else {
+		setStatus('Check')
+	}
 			}
 	else	if(isCheckmate()){
 		setStatus('Stalemate')
 		gameOver = true
+
+		document.querySelector('#turn-top p').style.visibility = 'hidden'
+		document.querySelector('#turn-bottom p').style.visibility = 'visible'
+		document.querySelector('#turn-bottom p').innerHTML = "Stalemate. You draw."
+
 		}
 	else{
-
-		if (playerColor == 'spectator'){
+		if ((playerColor == 'spectator') || (playerColor == '')){
 			// setStatus('')
+					document.querySelector('#turn-top p').style.visibility = 'hidden'
+					document.querySelector('#turn-bottom p').style.visibility = 'hidden'
 		} else if ((white_turn && playerColor == 'white') || (!white_turn && playerColor == 'black')){
 				// setStatus('Your turn')
-					document.querySelector('#turn-top p').innerHTML = ""
+					document.querySelector('#turn-top p').style.visibility = 'hidden'
+					document.querySelector('#turn-bottom p').style.visibility = 'visible'
 					document.querySelector('#turn-bottom p').innerHTML = "Your turn"
-		} else {
+					document.title = 'Your turn - Chess JS'
+		} else if ((!white_turn && playerColor == 'white') || (white_turn && playerColor == 'black')){
 				// setStatus('Waiting for opponent')
+					document.querySelector('#turn-top p').style.visibility = 'visible'
 					document.querySelector('#turn-top p').innerHTML = "Waiting for opponent"
-					document.querySelector('#turn-bottom p').innerHTML = ""
+					document.querySelector('#turn-bottom p').style.visibility = 'hidden'
+					document.title = "Waiting for opponent - Chess JS"
+		} else {
+					document.querySelector('#turn-top p').style.visibility = 'hidden'
+					document.querySelector('#turn-bottom p').style.visibility = 'visible'
+					document.querySelector('#turn-bottom p').innerHTML = "Your turn"
+					document.title = 'Your turn - Chess JS'
 		}
+
+		if (document.cookie){
+			myName = document.cookie.split('name=')[1]
+		}
+
+		if (rivalName == ''){
+			socket.emit('askRivalName')
+		}
+
+
+		if (playerColor == 'white'){
+				document.querySelector('#name-bottom').innerHTML = myName
+				document.querySelector('#name-top').innerHTML = rivalName
+		} else if (playerColor == 'black'){
+				document.querySelector('#name-bottom').innerHTML = myName	
+				document.querySelector('#name-top').innerHTML = rivalName
+		}
+
+		// if no black name
+		// 	ask black name
 
 		if (square_under_check){
 				square_under_check.element.classList.remove('check')
@@ -1202,10 +1402,17 @@ if(selected_squares.length==1){
 }
 
 
+elem = document.getElementById('moves')
+elem.scrollTop = 1000;
+
 	// Show last move
 
 
+	console.log(document.cookie)
 
+	if (searchParams.get("room") && !(document.cookie)){
+		playFriend()
+	}
 
 
 
@@ -1225,7 +1432,12 @@ function updateAllMoves(all_moves){
 		squares_map[all_moves[i].origin.column][all_moves[i].origin.row].piece.move(all_moves[i].target.column,all_moves[i].target.row)	
 	}
 
-
 	Draw()
 
 }
+
+
+setTimeout(() => {
+	socket.emit('askRivalName')
+	Draw()
+},1000)
