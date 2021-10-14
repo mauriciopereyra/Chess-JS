@@ -2,10 +2,12 @@
   --size: 800px;
 }
 
+
+
 #wrapper-status {
     display: none;
     position: absolute;
-    top: 260px;
+    top: 34vh;
     height: 400px;
     width: 380px;
 }
@@ -30,6 +32,8 @@
 	display: inline-block;
 	margin: 0 15px;
 }
+
+
 
 
 
@@ -209,4 +213,40 @@ div:has(> div) {
 #name-top, #name-bottom {
     background: #9aefe8;
     padding: 5px 0 5px;
+}
+
+
+
+@media only screen and (max-width: 1150px)  {
+
+}
+
+@media only screen and (orientation: portrait)  {
+
+    #wrapper-status {
+      display: block;
+      position: initial;
+      margin-top: 50px;
+      margin-left: 30vw;
+    }
+
+    #wrapper {
+        display: block;
+    }
+
+
+
+:root {
+  --size: 100vw;
+}
+
+}
+
+
+@media only screen and (orientation: landscape)  {
+
+:root {
+  --size: 100vh;
+}
+
 }
