@@ -1412,6 +1412,7 @@ elem.scrollTop = 1000;
 
 	if (searchParams.get("room") && !(document.cookie)){
 		playFriend()
+		document.getElementById('wrapper-status').style.display = 'block'
 	}
 
 

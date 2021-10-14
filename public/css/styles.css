@@ -218,13 +218,27 @@ div:has(> div) {
 
 
 @media only screen and (max-width: 1150px)  {
+    #wrapper-status {
+      position: initial;
+      margin-top: 50px;
+      margin-left: 30vw;
+    }
+
+    #wrapper {
+        display: block;
+    }
+
+
+
+:root {
+  --size: 100vw;
+}
 
 }
 
 @media only screen and (orientation: portrait)  {
 
     #wrapper-status {
-      display: block;
       position: initial;
       margin-top: 50px;
       margin-left: 30vw;
