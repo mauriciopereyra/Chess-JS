@@ -15,7 +15,7 @@ var piecesImg = {
 }
 
 
-const socket = io("http://localhost:3000")
+const socket = io("http://103.13.231.133:4000")
 var playerColor = ''
 var gameStarted = true
 
